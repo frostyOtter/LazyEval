@@ -16,4 +16,6 @@ class EvalResult(BaseModel):
     model_output: str = Field(..., description="Generated response from the model")
     expected_response: str = Field(..., description="Expected/reference response (ground truth)")
     latency_ms: float = Field(..., description="Time taken for model inference in milliseconds")
+    metrics: dict[str, float] = Field(default_factory=dict, description="Computed evaluation metrics")
+    evaluation_details: dict = Field(default_factory=dict, description="Detailed evaluation results/logs")
     timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC), description="When this evaluation was performed")

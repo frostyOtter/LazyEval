@@ -7,6 +7,7 @@ from src.config.models import EvaluationConfig
 from src.datasets.base import BaseDatasetLoader
 from src.evaluation.models import EvalResult
 from src.models.client import ModelClient
+from src.evaluation.registry import get_metric_functions
 
 
 class EvaluationRunner:
@@ -52,13 +53,35 @@ class EvaluationRunner:
                 output, latency = self.model_client.generate(prompt)
                 
                 # Create evaluation result
+                # Calculate metrics
+                # TODO: Pass dataset name from config or loader
+                dataset_name = self.eval_config.dataset_name if hasattr(self.eval_config, "dataset_name") else "Mahesh2841/Agriculture" 
+                metric_funcs = get_metric_functions(dataset_name)
+                
+                computed_metrics = {}
+                for name, func in metric_funcs.items():
+                    try:
+                        # Logic to dispatch arguments based on metric signature
+                        # Minimal implementation specific to current supported metrics
+                        if name == "answer_relevance":
+                            score = func(query=item.instruction, prediction=output)
+                        elif name == "answer_accuracy":
+                            score = func(prediction=output, reference=item.response)
+                        else:
+                            score = 0.0 # Placeholder
+                        
+                        computed_metrics[name] = score
+                    except Exception as metric_err:
+                        logger.error(f"Error calculating metric {name}: {metric_err}")
+
                 result = EvalResult(
                     item_id=item.item_id,
                     instruction=item.instruction,
                     input_text=item.input,
                     model_output=output,
                     expected_response=item.response,
-                    latency_ms=latency
+                    latency_ms=latency,
+                    metrics=computed_metrics
                 )
                 
                 results.append(result)

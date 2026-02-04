@@ -95,7 +95,7 @@ At the very least, we just need a mode class that initialize with a model-name, 
 - **LLM-as-Judge**: Using another LLM to evaluate quality
 - **Domain-specific metrics**: Based on your use case
 
-**Answer**: For each datasets, I will define a evaluation function that will be used to evaluate the dataset. This function will be used to evaluate the dataset. For the `Mahesh2841/Agriculture` dataset, the evaluation function will be LLM-as-Judge which supported from Langfuse.
+**Answer**: For each datasets, I will define a evaluation function that will be used to evaluate the dataset. This function will be used to evaluate the dataset. For the `Mahesh2841/Agriculture` dataset, the evaluation function will be LLM-as-Judge metrics.
 
 ### Q9: Ground Truth
 **Question**: Will datasets include:
