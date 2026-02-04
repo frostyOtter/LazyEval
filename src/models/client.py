@@ -46,6 +46,7 @@ class ModelClient:
             response: ChatCompletion = self.client.chat.completions.create(
                 model=self.config.model_name,
                 messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
                     {"role": "user", "content": prompt}
                 ],
                 temperature=self.config.temperature,

@@ -82,15 +82,6 @@ def main():
             logger.warning("No results generated. Evaluation may have failed or dataset was empty.")
             return
         
-        # Export to Langfuse
-        logger.info("=" * 60)
-        logger.info("Exporting to Langfuse")
-        logger.info("=" * 60)
-        
-        langfuse_exporter = LangfuseExporter(config.langfuse)
-        run_name = f"agriculture_eval_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        langfuse_exporter.export_results(results, run_name)
-        
         # Export to JSON backup
         logger.info("=" * 60)
         logger.info("Saving JSON Backup")
@@ -98,6 +89,21 @@ def main():
         
         json_exporter = JSONExporter(config.output.results_dir)
         json_file = json_exporter.export_results(results)
+        
+        # Export to Langfuse
+        logger.info("=" * 60)
+        logger.info("Exporting to Langfuse")
+        logger.info("=" * 60)
+        
+        try:
+            langfuse_exporter = LangfuseExporter(config.langfuse)
+            run_name = f"agriculture_eval_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            langfuse_exporter.export_results(results, run_name)
+            logger.info(f"Langfuse run: {run_name}")
+            logger.info(f"Check Langfuse dashboard at {config.langfuse.host} for LLM-as-Judge results")
+        except Exception as e:
+            logger.error(f"Failed to export to Langfuse: {e}")
+            run_name = "EXPORT_FAILED"
         
         # Summary
         logger.info("=" * 60)
