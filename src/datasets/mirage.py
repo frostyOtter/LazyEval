@@ -1,6 +1,5 @@
-"""Agriculture dataset loader from HuggingFace."""
+"""Mirage dataset loader from HuggingFace."""
 
-import os
 from pathlib import Path
 from typing import Iterator
 
@@ -10,24 +9,16 @@ from pydantic import ValidationError
 from datasets import load_dataset
 from src.config.models import DatasetConfig, EvaluationConfig
 from src.datasets.base import BaseDatasetLoader
-from src.datasets.models import AgricultureDatasetItem
-from src.metrics.answer_accuracy import calculate_answer_accuracy
-from src.metrics.answer_relevance import calculate_answer_relevance
+from src.datasets.models import MirageDatasetItem
+from src.metrics.answer_correctness import calculate_answer_correctness
 
 
-def metrics() -> list[callable]:
-    """
-    Returns a list of metric functions applicable to this dataset.
-    """
-    return [calculate_answer_accuracy, calculate_answer_relevance]
-
-
-class AgricultureDatasetLoader(BaseDatasetLoader):
-    """Loader for the Mahesh2841/Agriculture dataset from HuggingFace."""
+class MirageDatasetLoader(BaseDatasetLoader):
+    """Loader for the nlpai-lab/mirage dataset from HuggingFace."""
 
     def __init__(self, dataset_config: DatasetConfig, eval_config: EvaluationConfig):
         """
-        Initialize the Agriculture dataset loader.
+        Initialize the Mirage dataset loader.
 
         Args:
             dataset_config: Dataset configuration
@@ -40,26 +31,25 @@ class AgricultureDatasetLoader(BaseDatasetLoader):
         """
         Get the list of metric functions.
         """
-        return metrics()
+        return [calculate_answer_correctness]
 
-    def load(self) -> Iterator[AgricultureDatasetItem]:
+    def load(self) -> Iterator[MirageDatasetItem]:
         """
-        Load the Agriculture dataset from HuggingFace.
+        Load the Mirage dataset from HuggingFace.
 
         Yields:
-            Validated AgricultureDatasetItem instances
+            Validated MirageDatasetItem instances
         """
         logger.info(f"Loading dataset: {self.dataset_config.name}")
 
         try:
             # Determine cache directory
-            # src/datasets/agriculture.py -> src/datasets -> src -> root
             project_root = Path(__file__).resolve().parent.parent.parent
             dataset_cache_dir = project_root / "data"
 
             logger.info(f"Using dataset cache directory: {dataset_cache_dir}")
 
-            # Load dataset from HuggingFace with specific cache directory
+            # Load dataset
             dataset = load_dataset(
                 self.dataset_config.name,
                 split="train",
@@ -99,18 +89,12 @@ class AgricultureDatasetLoader(BaseDatasetLoader):
             if not self.eval_config.skip_on_error:
                 raise
 
-    def validate_item(self, item: dict) -> AgricultureDatasetItem | None:
+    def validate_item(self, item: dict) -> MirageDatasetItem | None:
         """
         Validate and parse a single dataset item.
-
-        Args:
-            item: Raw item dictionary from HuggingFace dataset
-
-        Returns:
-            Validated AgricultureDatasetItem or None if validation fails
         """
         try:
-            return AgricultureDatasetItem(**item)
+            return MirageDatasetItem(**item)
         except ValidationError as e:
             if self.eval_config.skip_on_error:
                 logger.warning(f"Skipping invalid item: {e}")

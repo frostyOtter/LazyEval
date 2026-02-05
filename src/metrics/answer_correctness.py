@@ -31,12 +31,33 @@ def calculate_answer_correctness(**kwargs) -> float:
         return 0.0
 
     pred_lower = prediction.lower()
-    ref_lower = reference.lower()
 
-    # Simple containment check as a baseline
-    if ref_lower in pred_lower or pred_lower in ref_lower:
-        logger.debug("Correctness: exact containment found")
-        return 1.0
+    # Handle list of references (e.g. from Mirage dataset)
+    if isinstance(reference, list):
+        references = [str(r).lower() for r in reference]
+    elif (
+        isinstance(reference, str)
+        and reference.strip().startswith("[")
+        and reference.strip().endswith("]")
+    ):
+        try:
+            import ast
+
+            parsed = ast.literal_eval(reference)
+            if isinstance(parsed, list):
+                references = [str(r).lower() for r in parsed]
+            else:
+                references = [reference.lower()]
+        except (ValueError, SyntaxError):
+            references = [reference.lower()]
+    else:
+        references = [str(reference).lower()]
+
+    # Simple containment check against any of the references
+    for ref_lower in references:
+        if ref_lower in pred_lower or pred_lower in ref_lower:
+            logger.debug(f"Correctness: containment found for reference '{ref_lower}'")
+            return 1.0
 
     # TODO: Implement fuzzaldrin or LLM-based judging
     logger.debug("Correctness: no containment, returning 0.0 (placeholder)")
