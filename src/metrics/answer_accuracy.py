@@ -6,29 +6,29 @@ def calculate_answer_accuracy(**kwargs) -> float:
     Calculates exact match accuracy between prediction and reference.
 
     Args:
-        **kwargs: Must contain 'prediction' and 'reference'. 'case_sensitive' is optional.
+        **kwargs: Must contain 'prediction' and 'ground_truth'. 'case_sensitive' is optional.
 
     Returns:
         1.0 if match, 0.0 otherwise.
     """
     prediction = kwargs.get("prediction")
-    reference = kwargs.get("reference")
+    ground_truth = kwargs.get("ground_truth")
     case_sensitive = kwargs.get("case_sensitive", False)
 
-    if prediction is None or reference is None:
+    if prediction is None or ground_truth is None:
         logger.warning(
-            f"Missing required arguments for accuracy: prediction={prediction}, reference={reference}"
+            f"Missing required arguments for accuracy: prediction={prediction}, ground_truth={ground_truth}"
         )
         return 0.0
 
-    if not isinstance(prediction, str) or not isinstance(reference, str):
+    if not isinstance(prediction, str) or not isinstance(ground_truth, str):
         logger.warning(
-            f"Invalid input types for accuracy: pred={type(prediction)}, ref={type(reference)}"
+            f"Invalid input types for accuracy: pred={type(prediction)}, qt={type(ground_truth)}"
         )
         return 0.0
 
     pred_norm = prediction if case_sensitive else prediction.lower()
-    ref_norm = reference if case_sensitive else reference.lower()
+    ref_norm = ground_truth if case_sensitive else ground_truth.lower()
 
     match = pred_norm.strip() == ref_norm.strip()
 

@@ -40,3 +40,4 @@ htmlcov/
 Thumbs.db
 .ruff_cache
 data/
+baml_client/

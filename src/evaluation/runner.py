@@ -1,16 +1,18 @@
 """Sequential evaluation runner for LazyEval platform."""
 
 import inspect
+import time
+from typing import Optional
 
 from langfuse import observe
 from loguru import logger
 from tqdm import tqdm
 
+from baml_client.async_client import b as stream_baml_client
 from src.config.models import EvaluationConfig
 from src.datasets.base import BaseDatasetLoader
 from src.evaluation.models import EvalResult
 from src.integrations.langfuse_client import update_trace
-from src.models.client import ModelClient
 
 
 class EvaluationRunner:
@@ -19,7 +21,6 @@ class EvaluationRunner:
     def __init__(
         self,
         dataset_loader: BaseDatasetLoader,
-        model_client: ModelClient,
         eval_config: EvaluationConfig,
     ):
         """
@@ -27,14 +28,12 @@ class EvaluationRunner:
 
         Args:
             dataset_loader: Dataset loader instance
-            model_client: Model client instance
             eval_config: Evaluation configuration
         """
         self.dataset_loader = dataset_loader
-        self.model_client = model_client
         self.eval_config = eval_config
 
-    def run(self) -> list[EvalResult]:
+    async def run(self) -> list[EvalResult]:
         """
         Run evaluation on all dataset items sequentially.
 
@@ -47,7 +46,7 @@ class EvaluationRunner:
 
         # Process items sequentially with progress bar
         for item in tqdm(self.dataset_loader.load(), desc="Evaluating"):
-            result = self._process_item(item)
+            result = await self._process_item(item)
             if result:
                 results.append(result)
 
@@ -55,7 +54,7 @@ class EvaluationRunner:
         return results
 
     @observe(as_type="span")
-    def _process_item(self, item) -> EvalResult | None:
+    async def _process_item(self, item) -> EvalResult | None:
         """
         Process a single dataset item: generate, evaluate, and return result.
 
@@ -71,7 +70,10 @@ class EvaluationRunner:
 
             # Call model API
             logger.debug(f"Processing item {item.item_id}")
-            output, latency = self.model_client.generate(prompt)
+            start_time = time.perf_counter()
+            output = await stream_baml_client.Generate(prompt)
+            latency = (time.perf_counter() - start_time) * 1000
+
             update_trace(
                 **{
                     "name": item.item_id,
@@ -87,20 +89,22 @@ class EvaluationRunner:
             # Get metrics directly from the dataset loader
             metric_funcs = self.dataset_loader.get_metrics()
 
-            # Prepare context for metrics
+            # Prepare context for metrics with updated variable names
             eval_context = {
                 "prediction": output,
-                "reference": item.response,
-                "instruction": item.instruction,
+                "ground_truth": item.response,
                 "query": item.instruction,
-                "input": item.input,
+                "context": item.input,
             }
 
             computed_metrics = {}
             for func in metric_funcs:
                 try:
                     # Call the metric function
-                    score = func(**eval_context)
+                    if inspect.iscoroutinefunction(func):
+                        score = await func(**eval_context)
+                    else:
+                        score = func(**eval_context)
                     computed_metrics[func.__name__] = score
 
                 except Exception as metric_err:
