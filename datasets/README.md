@@ -1,23 +1,33 @@
 # Datasets
 
-This directory contains the datasets used for evaluation.
+**Place dataset files here.** Supported formats: `.json`, `.jsonl`, `.csv`.
 
-## Supported Formats
-- JSON (`.json`)
-- JSON Lines (`.jsonl`)
-- CSV (`.csv`)
+## 📂 Structure
+```
+datasets/
+├── manual/              # Custom manual tests
+│   └── test_v1.json
+├── production/          # Production logs
+│   └── logs_2023.jsonl
+└── README.md
+```
 
-## Structure
-Place your dataset files directly in this directory or organize them into subfolders by task or category.
+## 📄 Format Example
+Your dataset items should generally look like this:
 
-## Metric Configuration
-Metrics for each dataset are configured in `src/evaluation/registry.py`.
-To add a new dataset:
-1. Add your dataset file here.
-2. In `src/evaluation/registry.py`, add an entry to `DATASET_METRICS_MAP` mapping your dataset name to a list of metric names.
-   Example:
-   ```python
-   DATASET_METRICS_MAP = {
-       "my_new_dataset": ["answer_accuracy", "answer_relevance"]
-   }
-   ```
+```json
+{
+  "id": "item_01",
+  "query": "What is the capital of France?",
+  "reference": "Paris",
+  "context": "Paris is the capital and most populous city of France."
+}
+```
+
+## 🔌 Integration
+To add new datasets, simply drop the file here and reference it in `src/evaluation/registry.py`:
+```python
+DATASET_METRICS_MAP = {
+    "my_new_dataset": ["answer_accuracy", "answer_relevance"]
+}
+```

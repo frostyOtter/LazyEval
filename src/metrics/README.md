@@ -1,159 +1,41 @@
 # Metrics
 
-This module contains evaluation metrics for assessing LLM outputs across **accuracy, correctness, relevance, and hallucination-related dimensions**.
-Each metric is designed to answer a *distinct evaluation question* and should be combined deliberately depending on the task (QA, RAG, chat, etc.).
+**Evaluation metrics for assessing LLM outputs.**
+
+> [!TIP]
+> **Quick Reference**: Choose metrics based on your evaluation goal.
+
+| Metric | Checks | Use for | Diff |
+| :--- | :--- | :--- | :--- |
+| **Accuracy** | Exact match (strict) | Math, Classification, IDs | `==` |
+| **Correctness** | Factual truth (semantic) | QA, Reasoning | `~=` |
+| **Relevance** | Response vs. Query | Chat, RAG, Search | `?` |
+| **Groundedness** | Response vs. Context | RAG, Hallucination Check | `⊆` |
 
 ---
 
-## Available Metrics
+## ⚡️ Cheat Sheet
 
-### `answer_accuracy.py`
+### `answer_accuracy`
+*   **Goal**: Exact equality.
+*   **Good for**: "What is 2+2?", "Extract the ID".
+*   **Bad for**: Chat, Explanations.
+*   **Func**: `calculate_answer_accuracy(pred, ref)`
 
-**Purpose**
-Measures **exact-match accuracy** between a model prediction and a reference answer.
+### `answer_correctness`
+*   **Goal**: Meaning matches, even if words differ.
+*   **Good for**: "Explain quantum physics", Standard QA.
+*   **Requires**: Ground truth reference.
+*   **Func**: `calculate_answer_correctness(pred, ref)`
 
-**What it checks**
+### `answer_relevance`
+*   **Goal**: Did the model answer *the specific question asked*?
+*   **Good for**: Chatbots, avoiding generic refusals.
+*   **Note**: An answer can be *relevant* but *wrong*.
+*   **Func**: `calculate_answer_relevance(query, pred)`
 
-* Strict string or token-level match
-* No semantic flexibility
-
-**Use when**
-
-* Deterministic outputs
-* Closed-form answers (math, IDs, labels)
-* Golden datasets with canonical answers
-
-**Function**
-
-```python
-calculate_answer_accuracy(prediction, reference, case_sensitive=False)
-```
-
-**Notes**
-
-* Penalizes paraphrases
-* Not suitable for open-ended generation
-
----
-
-### `answer_correctness.py`
-
-**Purpose**
-Evaluates whether the answer is **factually and logically correct** relative to a reference answer.
-
-**What it checks**
-
-* Semantic equivalence
-* Logical consistency
-* Partial correctness (depending on implementation)
-
-**Use when**
-
-* Open-ended QA
-* Explanatory answers
-* Reasoning-heavy tasks
-
-**Function**
-
-```python
-calculate_answer_correctness(prediction, reference)
-```
-
-**Notes**
-
-* More flexible than `answer_accuracy`
-* Still requires a **ground-truth reference**
-
----
-
-### `answer_relevance.py`
-
-**Purpose**
-Measures how well the generated answer **addresses the user query or instruction**, regardless of factual correctness.
-
-**What it checks**
-
-* On-topic alignment
-* Instruction following
-* Penalizes off-topic or generic responses
-
-**Use when**
-
-* Chatbots
-* Assistants
-* Search / retrieval responses
-
-**Function**
-
-```python
-calculate_answer_relevance(query, prediction)
-```
-
-**Notes**
-
-* Does **not** evaluate truth
-* An answer can be relevant but incorrect
-
----
-
-### `response_groundedness.py`
-
-**Purpose**
-Assesses whether the response is **supported by the provided context**, primarily for hallucination detection.
-
-**What it checks**
-
-* Claims can be traced back to context
-* Penalizes unsupported statements
-
-**Use when**
-
-* Retrieval-Augmented Generation (RAG)
-* Document QA
-* Enterprise / compliance-sensitive systems
-
-**Function**
-
-```python
-calculate_response_groundedness(prediction, context)
-```
-
-**Notes**
-
-* Does not require a ground-truth answer
-* Context may be incorrect; groundedness does not imply real-world truth
-
----
-
-## Metric Relationship Summary
-
-| Metric                | Requires Reference | Requires Context | Checks Truth     | Checks On-Topic | Detects Hallucination |
-| --------------------- | ------------------ | ---------------- | ---------------- | --------------- | --------------------- |
-| Answer Accuracy       | ✅                  | ❌                | ✅ (strict)       | ❌               | ❌                     |
-| Answer Correctness    | ✅                  | ❌                | ✅ (semantic)     | ❌               | ❌                     |
-| Answer Relevance      | ❌                  | ❌                | ❌                | ✅               | ❌                     |
-| Response Groundedness | ❌                  | ✅                | ⚠️ (via context) | ❌               | ✅                     |
-
----
-
-## Recommended Metric Combinations
-
-### Deterministic QA
-
-* `answer_accuracy`
-
-### Open-ended QA
-
-* `answer_correctness`
-* `answer_relevance`
-
-### RAG Systems
-
-* `answer_relevance`
-* `response_groundedness`
-* (`answer_correctness` if references exist)
-
-### Chat / Assistant Evaluation
-
-* `answer_relevance`
-* (optionally) `response_groundedness`
+### `response_groundedness`
+*   **Goal**: Does the context *support* the answer? (Anti-hallucination).
+*   **Good for**: RAG systems.
+*   **Note**: Checks if `Answer ⊆ Context`.
+*   **Func**: `calculate_response_groundedness(pred, context)`
