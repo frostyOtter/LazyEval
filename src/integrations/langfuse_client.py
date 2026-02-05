@@ -80,7 +80,6 @@ class LangfuseExporter:
         langfuse_client.flush()
         logger.info(f"Successfully exported results to Langfuse: {run_name}")
 
-    @observe(as_type="span")
     def _export_single_result(self, result: EvalResult):
         """
         Export a single evaluation result as a span.

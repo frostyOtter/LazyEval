@@ -54,7 +54,7 @@ class EvaluationRunner:
         logger.info(f"Evaluation complete: {len(results)} items processed successfully")
         return results
 
-    @observe(as_type="trace")
+    @observe(as_type="span")
     def _process_item(self, item) -> EvalResult | None:
         """
         Process a single dataset item: generate, evaluate, and return result.
