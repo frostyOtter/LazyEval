@@ -15,6 +15,7 @@ dependencies = [
     "httpx",
     "tqdm",
     "pydantic-settings>=2.12.0",
+    "baml-py>=0.218.1",
 ]
 
 [project.optional-dependencies]

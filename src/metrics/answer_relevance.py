@@ -1,11 +1,10 @@
+from baml_client.async_client import b as stream_baml_client
 from loguru import logger
 
 
-def calculate_answer_relevance(**kwargs) -> float:
+async def calculate_answer_relevance(**kwargs) -> float:
     """
-    Calculates how relevant the answer is to the query.
-
-    This usually requires an LLM to judge if the answer addresses the question.
+    Calculates how relevant the answer is to the query using BAML-defined LLM judge.
 
     Args:
         **kwargs: Must contain 'query' and 'prediction'.
@@ -22,8 +21,12 @@ def calculate_answer_relevance(**kwargs) -> float:
         )
         return 0.0
 
-    # Minimal implementation: always return 1.0 or TODO
-    # because relevance requires semantic understanding
+    try:
+        score = await stream_baml_client.AnswerRelevance(
+            query=query, prediction=prediction
+        )
+        return float(score)
 
-    logger.warning("calculate_answer_relevance is a stub. Requires LLM judge.")
-    return 0.5  # Placeholder
+    except Exception as e:
+        logger.error(f"Error in answer_relevance: {e}")
+        return 0.0
