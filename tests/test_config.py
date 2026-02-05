@@ -14,7 +14,8 @@ def test_load_config_with_env_vars(tmp_path):
     """Test loading configuration with environment variables."""
     # Create a temporary config file
     config_file = tmp_path / "config.yaml"
-    config_file.write_text("""
+    config_file.write_text(
+        """
 model:
   temperature: 0.7
   top_p: 1.0
@@ -30,8 +31,9 @@ evaluation:
 output:
   results_dir: "results"
   log_dir: "logs"
-""")
-    
+"""
+    )
+
     # Set environment variables
     env_vars = {
         "MODEL_NAME": "test-model",
@@ -39,12 +41,12 @@ output:
         "MODEL_API_KEY": "test-key",
         "LANGFUSE_PUBLIC_KEY": "pk-test",
         "LANGFUSE_SECRET_KEY": "sk-test",
-        "LANGFUSE_HOST": "https://test.langfuse.com"
+        "LANGFUSE_BASE_URL": "https://test.langfuse.com",
     }
-    
+
     with patch.dict(os.environ, env_vars, clear=False):
         config = load_config(str(config_file))
-    
+
     # Assertions
     assert isinstance(config, AppConfig)
     assert config.model.model_name == "test-model"
@@ -55,6 +57,7 @@ output:
     assert config.dataset.max_samples == 10
     assert config.evaluation.skip_on_error is True
     assert config.langfuse.public_key == "pk-test"
+    assert config.langfuse.base_url == "https://test.langfuse.com"
 
 
 def test_load_config_missing_file():
