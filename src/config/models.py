@@ -39,7 +39,7 @@ class LangfuseConfig(BaseModel):
     
     public_key: str = Field(..., description="Langfuse public API key")
     secret_key: str = Field(..., description="Langfuse secret API key")
-    host: str = Field(default="https://cloud.langfuse.com", description="Langfuse host URL")
+    base_url: str = Field(default="https://cloud.langfuse.com", description="Langfuse base URL")
 
 
 class AppConfig(BaseModel):

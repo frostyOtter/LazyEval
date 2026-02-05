@@ -5,7 +5,7 @@ model:
 
 dataset:
   name: "Mahesh2841/Agriculture"
-  max_samples: 5  # null = use all samples
+  max_samples: 2  # null = use all samples
 
 evaluation:
   skip_on_error: true
